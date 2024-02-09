@@ -3,6 +3,8 @@ from sqlalchemy import MetaData
 from sqlalchemy import Table, Column, Integer, String
 from sqlalchemy import ForeignKey
 from sqlalchemy import insert
+from sqlalchemy import select
+
 engine = create_engine("sqlite+pysqlite:///:memory:", echo=True)
 
 metadata_obj = MetaData()
@@ -39,5 +41,10 @@ with engine.connect() as conn:
             {"name": "patrick", "fullname": "Patrick Star"},
         ],
     )
+    conn.commit()
+
+with engine.connect() as conn:
+    stmt = select(user_table)
+    result = conn.execute(stmt)
     conn.commit()
 
