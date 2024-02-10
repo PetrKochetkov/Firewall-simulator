@@ -1,8 +1,6 @@
-import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy import MetaData
 from sqlalchemy import Table, Column, Integer, String
-from sqlalchemy import ForeignKey
 from sqlalchemy import insert
 from sqlalchemy import select
 from sqlalchemy import text
@@ -14,6 +12,7 @@ def create_db(database_name):
         stmt_create = text(f'create database {database_name}')
         conn_create.execute(stmt_create)
         conn_create.commit()
+        conn_create.close()
 
 
 def delete_db(database_name):
@@ -22,6 +21,7 @@ def delete_db(database_name):
         stmt_delete = text(f'drop database {database_name}')
         conn_delete.execute(stmt_delete)
         conn_delete.commit()
+        conn_delete.close()
 
 
 def show_tables(database_name):
@@ -33,47 +33,91 @@ def show_tables(database_name):
         for element in result_show_tb:
             resulted_list.append(element)
         conn_show_tb.commit()
+        conn_show_tb.close()
         return resulted_list
 
 
-db_name = 'firewall'
-metadata_obj = MetaData()
-engine = create_engine(f"mysql+pymysql://root:root@localhost:3306/{db_name}")
-
-user_table = Table(
-    "user_account",
-    metadata_obj,
-    Column("id", Integer, primary_key=True),
-    Column("name", String(30)),
-    Column("fullname", String(30)), )
-
-address_table = Table(
-    "address",
-    metadata_obj,
-    Column("id", Integer, primary_key=True),
-    Column("user_id", ForeignKey("user_account.id"), nullable=False),
-    Column("email_address", String(30), nullable=False), )
-
-metadata_obj.create_all(engine)
+def values_from_table(database_name, python_table_name):
+    engine_values_from_table = create_engine(f"mysql+pymysql://root:root@localhost:3306/{database_name}")
+    with engine_values_from_table.connect() as conn_values_from_table:
+        stmt_values_from_table = select(python_table_name)
+        result_show_tb = conn_values_from_table.execute(stmt_values_from_table)
+        resulted_list = list()
+        for element in result_show_tb:
+            resulted_list.append(element[-1])
+        conn_values_from_table.commit()
+        conn_values_from_table.close()
+        return resulted_list
 
 
-with engine.connect() as conn:
-    result = conn.execute(
-        insert(user_table),
-        [
-            {"name": "spongebob", "fullname": "Spongebob Squarepants"},
-            {"name": "sandy", "fullname": "Sandy Cheeks"},
-            {"name": "patrick", "fullname": "Patrick Star"},
-        ],
+def create_tables(database_name):
+    engine_create_tables = create_engine(f"mysql+pymysql://root:root@localhost:3306/{database_name}")
+    approved_sources = Table(
+        "approved_sources",
+        metadata_obj,
+        Column("id", Integer, primary_key=True),
+        Column("source", String(100), nullable=False),
     )
-    conn.commit()
 
-with engine.connect() as conn:
-    stmt = select(user_table)
-    result = conn.execute(stmt)
-    for el in result:
-        print(el)
-    conn.commit()
+    approved_destinations = Table(
+        "approved_destinations",
+        metadata_obj,
+        Column("id", Integer, primary_key=True),
+        Column("destination", String(100), nullable=False),
+    )
 
-print(show_tables(db_name))
+    approved_content = Table(
+        "approved_content",
+        metadata_obj,
+        Column("id", Integer, primary_key=True),
+        Column("content", String(100), nullable=False),
+    )
 
+    approved_packet_protocols = Table(
+        "approved_packet_protocols",
+        metadata_obj,
+        Column("id", Integer, primary_key=True),
+        Column("packet_protocol", String(100), nullable=False),
+    )
+
+    approved_app_protocols = Table(
+        "approved_app_protocols",
+        metadata_obj,
+        Column("id", Integer, primary_key=True),
+        Column("app_protocol", String(100), nullable=False),
+    )
+    metadata_obj.create_all(engine_create_tables)
+
+    list_of_tables = [approved_sources, approved_destinations, approved_content, approved_packet_protocols,
+                      approved_app_protocols, ]
+
+
+if __name__ == "__main__":
+    db_name = 'firewall'
+    engine = create_engine(f"mysql+pymysql://root:root@localhost:3306/{db_name}")
+    metadata_obj = MetaData()
+    create_db(db_name)
+    create_tables(db_name)
+
+    with engine.connect() as conn:
+        result = conn.execute(
+            insert(approved_sources),
+            [
+                {"source": "192.168.0.1:7632"},
+                {"source": "87.2.43.2:131"},
+                {"source": "31.23.123.12:131"},
+            ],
+        )
+        conn.commit()
+
+    with engine.connect() as conn:
+        stmt = select(approved_sources)
+        result = conn.execute(stmt)
+        for el in result:
+            print(el)
+        conn.commit()
+
+    print(show_tables(db_name))
+    print(values_from_table(db_name, approved_sources))
+
+    # delete_db(db_name)
