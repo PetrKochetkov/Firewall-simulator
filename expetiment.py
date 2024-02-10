@@ -42,16 +42,66 @@ def values_from_table(database_name, python_table_name):
     with engine_values_from_table.connect() as conn_values_from_table:
         stmt_values_from_table = select(python_table_name)
         result_show_tb = conn_values_from_table.execute(stmt_values_from_table)
-        resulted_list = list()
+        temp_list = list()
         for element in result_show_tb:
-            resulted_list.append(element[-1])
+            temp_list.append(list(element))
+        resulted_dict = dict(temp_list)
         conn_values_from_table.commit()
         conn_values_from_table.close()
-        return resulted_list
+        return resulted_dict
 
 
-def create_tables(database_name):
-    engine_create_tables = create_engine(f"mysql+pymysql://root:root@localhost:3306/{database_name}")
+# def create_tables(database_name):
+#     engine_create_tables = create_engine(f"mysql+pymysql://root:root@localhost:3306/{database_name}")
+#
+#     approved_sources = Table(
+#         "approved_sources",
+#         metadata_obj,
+#         Column("id", Integer, primary_key=True),
+#         Column("source", String(100), nullable=False),
+#     )
+#
+#     approved_destinations = Table(
+#         "approved_destinations",
+#         metadata_obj,
+#         Column("id", Integer, primary_key=True),
+#         Column("destination", String(100), nullable=False),
+#     )
+#
+#     approved_content = Table(
+#         "approved_content",
+#         metadata_obj,
+#         Column("id", Integer, primary_key=True),
+#         Column("content", String(100), nullable=False),
+#     )
+#
+#     approved_packet_protocols = Table(
+#         "approved_packet_protocols",
+#         metadata_obj,
+#         Column("id", Integer, primary_key=True),
+#         Column("packet_protocol", String(100), nullable=False),
+#     )
+#
+#     approved_app_protocols = Table(
+#         "approved_app_protocols",
+#         metadata_obj,
+#         Column("id", Integer, primary_key=True),
+#         Column("app_protocol", String(100), nullable=False),
+#     )
+#     metadata_obj.create_all(engine_create_tables)
+#
+#     list_of_tables = [approved_sources, approved_destinations, approved_content, approved_packet_protocols,
+#                       approved_app_protocols, ]
+
+
+if __name__ == "__main__":
+
+    db_name = 'firewall'
+    engine = create_engine(f"mysql+pymysql://root:root@localhost:3306/{db_name}")
+
+    metadata_obj = MetaData()
+    #  create_db(db_name)
+
     approved_sources = Table(
         "approved_sources",
         metadata_obj,
@@ -86,18 +136,7 @@ def create_tables(database_name):
         Column("id", Integer, primary_key=True),
         Column("app_protocol", String(100), nullable=False),
     )
-    metadata_obj.create_all(engine_create_tables)
-
-    list_of_tables = [approved_sources, approved_destinations, approved_content, approved_packet_protocols,
-                      approved_app_protocols, ]
-
-
-if __name__ == "__main__":
-    db_name = 'firewall'
-    engine = create_engine(f"mysql+pymysql://root:root@localhost:3306/{db_name}")
-    metadata_obj = MetaData()
-    create_db(db_name)
-    create_tables(db_name)
+    metadata_obj.create_all(engine)
 
     with engine.connect() as conn:
         result = conn.execute(
