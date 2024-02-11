@@ -44,10 +44,63 @@ def values_from_table(database_name, python_table_name):
         result_show_tb = conn_values_from_table.execute(stmt_values_from_table)
         temp_list = list()
         for element in result_show_tb:
-            temp_list.append(list(element))
+            temp_list.append(reversed(list(element)))
+        resulted_dict = dict(temp_list)
         conn_values_from_table.commit()
         conn_values_from_table.close()
-        return temp_list
+        return resulted_dict
+
+
+def truncate_table(database_name, table_name):
+    engine_truncate_tb = create_engine(f"mysql+pymysql://root:root@localhost:3306/{database_name}")
+    with engine_truncate_tb.connect() as conn_truncate_tb:
+        stmt_truncate_tb = text(f'Truncate {table_name}')
+        conn_truncate_tb.execute(stmt_truncate_tb)
+        conn_truncate_tb.commit()
+        conn_truncate_tb.close()
+
+
+# def create_tables(database_name):
+#     engine_create_tables = create_engine(f"mysql+pymysql://root:root@localhost:3306/{database_name}")
+#
+#     approved_sources = Table(
+#         "approved_sources",
+#         metadata_obj,
+#         Column("id", Integer, primary_key=True),
+#         Column("source", String(100), nullable=False),
+#     )
+#
+#     approved_destinations = Table(
+#         "approved_destinations",
+#         metadata_obj,
+#         Column("id", Integer, primary_key=True),
+#         Column("destination", String(100), nullable=False),
+#     )
+#
+#     approved_content = Table(
+#         "approved_content",
+#         metadata_obj,
+#         Column("id", Integer, primary_key=True),
+#         Column("content", String(100), nullable=False),
+#     )
+#
+#     approved_packet_protocols = Table(
+#         "approved_packet_protocols",
+#         metadata_obj,
+#         Column("id", Integer, primary_key=True),
+#         Column("packet_protocol", String(100), nullable=False),
+#     )
+#
+#     approved_app_protocols = Table(
+#         "approved_app_protocols",
+#         metadata_obj,
+#         Column("id", Integer, primary_key=True),
+#         Column("app_protocol", String(100), nullable=False),
+#     )
+#     metadata_obj.create_all(engine_create_tables)
+#
+#     list_of_tables = [approved_sources, approved_destinations, approved_content, approved_packet_protocols,
+#                       approved_app_protocols, ]
 
 
 if __name__ == "__main__":
@@ -56,15 +109,13 @@ if __name__ == "__main__":
     engine = create_engine(f"mysql+pymysql://root:root@localhost:3306/{db_name}")
 
     metadata_obj = MetaData()
-    # create_db(db_name)
-    # rule can be "accept" -- разрешить трафик; "reject" -- не пропускать трафик, а пользователю
-    # выдать сообщение-ошибку «недоступно»; "drop" -- заблокировать передачу и не выдавать ответного сообщения.
+    #  create_db(db_name)
+
     approved_sources = Table(
         "approved_sources",
         metadata_obj,
         Column("id", Integer, primary_key=True),
         Column("source", String(100), nullable=False),
-        Column("rule", String(100), nullable=False),
     )
 
     approved_destinations = Table(
@@ -72,7 +123,6 @@ if __name__ == "__main__":
         metadata_obj,
         Column("id", Integer, primary_key=True),
         Column("destination", String(100), nullable=False),
-        Column("rule", String(100), nullable=False),
     )
 
     approved_content = Table(
@@ -80,7 +130,6 @@ if __name__ == "__main__":
         metadata_obj,
         Column("id", Integer, primary_key=True),
         Column("content", String(100), nullable=False),
-        Column("rule", String(100), nullable=False),
     )
 
     approved_packet_protocols = Table(
@@ -88,7 +137,6 @@ if __name__ == "__main__":
         metadata_obj,
         Column("id", Integer, primary_key=True),
         Column("packet_protocol", String(100), nullable=False),
-        Column("rule", String(100), nullable=False),
     )
 
     approved_app_protocols = Table(
@@ -96,7 +144,6 @@ if __name__ == "__main__":
         metadata_obj,
         Column("id", Integer, primary_key=True),
         Column("app_protocol", String(100), nullable=False),
-        Column("rule", String(100), nullable=False),
     )
     metadata_obj.create_all(engine)
 
@@ -104,9 +151,9 @@ if __name__ == "__main__":
         result = conn.execute(
             insert(approved_sources),
             [
-                {"source": "192.168.0.1:7632", 'rule': "accept"},
-                {"source": "87.2.43.2:131", 'rule': "drop"},
-                {"source": "31.23.123.12:131", 'rule': "reject"},
+                {"source": "192.168.0.1:7632"},
+                {"source": "87.2.43.2:131"},
+                {"source": "31.23.123.12:131"},
             ],
         )
         conn.commit()
@@ -120,5 +167,5 @@ if __name__ == "__main__":
 
     print(show_tables(db_name))
     print(values_from_table(db_name, approved_sources))
-
-    # delete_db(db_name)
+    truncate_table(db_name, approved_sources)
+    print(values_from_table(db_name, approved_sources))
