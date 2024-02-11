@@ -44,11 +44,20 @@ def values_from_table(database_name, python_table_name):
         result_show_tb = conn_values_from_table.execute(stmt_values_from_table)
         temp_list = list()
         for element in result_show_tb:
-            temp_list.append(list(element))
+            temp_list.append(reversed(list(element)))
         resulted_dict = dict(temp_list)
         conn_values_from_table.commit()
         conn_values_from_table.close()
         return resulted_dict
+
+
+def truncate_table(database_name, table_name):
+    engine_truncate_tb = create_engine(f"mysql+pymysql://root:root@localhost:3306/{database_name}")
+    with engine_truncate_tb.connect() as conn_truncate_tb:
+        stmt_truncate_tb = text(f'Truncate {table_name}')
+        conn_truncate_tb.execute(stmt_truncate_tb)
+        conn_truncate_tb.commit()
+        conn_truncate_tb.close()
 
 
 # def create_tables(database_name):
@@ -158,5 +167,5 @@ if __name__ == "__main__":
 
     print(show_tables(db_name))
     print(values_from_table(db_name, approved_sources))
-
-    # delete_db(db_name)
+    truncate_table(db_name, approved_sources)
+    print(values_from_table(db_name, approved_sources))
