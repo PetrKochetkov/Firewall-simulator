@@ -45,53 +45,9 @@ def values_from_table(database_name, python_table_name):
         temp_list = list()
         for element in result_show_tb:
             temp_list.append(list(element))
-        resulted_dict = dict(temp_list)
         conn_values_from_table.commit()
         conn_values_from_table.close()
-        return resulted_dict
-
-
-# def create_tables(database_name):
-#     engine_create_tables = create_engine(f"mysql+pymysql://root:root@localhost:3306/{database_name}")
-#
-#     approved_sources = Table(
-#         "approved_sources",
-#         metadata_obj,
-#         Column("id", Integer, primary_key=True),
-#         Column("source", String(100), nullable=False),
-#     )
-#
-#     approved_destinations = Table(
-#         "approved_destinations",
-#         metadata_obj,
-#         Column("id", Integer, primary_key=True),
-#         Column("destination", String(100), nullable=False),
-#     )
-#
-#     approved_content = Table(
-#         "approved_content",
-#         metadata_obj,
-#         Column("id", Integer, primary_key=True),
-#         Column("content", String(100), nullable=False),
-#     )
-#
-#     approved_packet_protocols = Table(
-#         "approved_packet_protocols",
-#         metadata_obj,
-#         Column("id", Integer, primary_key=True),
-#         Column("packet_protocol", String(100), nullable=False),
-#     )
-#
-#     approved_app_protocols = Table(
-#         "approved_app_protocols",
-#         metadata_obj,
-#         Column("id", Integer, primary_key=True),
-#         Column("app_protocol", String(100), nullable=False),
-#     )
-#     metadata_obj.create_all(engine_create_tables)
-#
-#     list_of_tables = [approved_sources, approved_destinations, approved_content, approved_packet_protocols,
-#                       approved_app_protocols, ]
+        return temp_list
 
 
 if __name__ == "__main__":
@@ -100,13 +56,15 @@ if __name__ == "__main__":
     engine = create_engine(f"mysql+pymysql://root:root@localhost:3306/{db_name}")
 
     metadata_obj = MetaData()
-    #  create_db(db_name)
-
+    # create_db(db_name)
+    # rule can be "accept" -- разрешить трафик; "reject" -- не пропускать трафик, а пользователю
+    # выдать сообщение-ошибку «недоступно»; "drop" -- заблокировать передачу и не выдавать ответного сообщения.
     approved_sources = Table(
         "approved_sources",
         metadata_obj,
         Column("id", Integer, primary_key=True),
         Column("source", String(100), nullable=False),
+        Column("rule", String(100), nullable=False),
     )
 
     approved_destinations = Table(
@@ -114,6 +72,7 @@ if __name__ == "__main__":
         metadata_obj,
         Column("id", Integer, primary_key=True),
         Column("destination", String(100), nullable=False),
+        Column("rule", String(100), nullable=False),
     )
 
     approved_content = Table(
@@ -121,6 +80,7 @@ if __name__ == "__main__":
         metadata_obj,
         Column("id", Integer, primary_key=True),
         Column("content", String(100), nullable=False),
+        Column("rule", String(100), nullable=False),
     )
 
     approved_packet_protocols = Table(
@@ -128,6 +88,7 @@ if __name__ == "__main__":
         metadata_obj,
         Column("id", Integer, primary_key=True),
         Column("packet_protocol", String(100), nullable=False),
+        Column("rule", String(100), nullable=False),
     )
 
     approved_app_protocols = Table(
@@ -135,6 +96,7 @@ if __name__ == "__main__":
         metadata_obj,
         Column("id", Integer, primary_key=True),
         Column("app_protocol", String(100), nullable=False),
+        Column("rule", String(100), nullable=False),
     )
     metadata_obj.create_all(engine)
 
@@ -142,9 +104,9 @@ if __name__ == "__main__":
         result = conn.execute(
             insert(approved_sources),
             [
-                {"source": "192.168.0.1:7632"},
-                {"source": "87.2.43.2:131"},
-                {"source": "31.23.123.12:131"},
+                {"source": "192.168.0.1:7632", 'rule': "accept"},
+                {"source": "87.2.43.2:131", 'rule': "drop"},
+                {"source": "31.23.123.12:131", 'rule': "reject"},
             ],
         )
         conn.commit()
