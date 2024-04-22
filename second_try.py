@@ -1,7 +1,18 @@
 import json
 import re
 import sys
-import cv2
+import os
+import signal
+import keyboard
+import multiprocessing
+
+
+def hook(pid):
+    while True:
+        if keyboard.is_pressed('ctrl + 1'):
+            os.kill(pid, signal.SIGTERM)
+            sys.exit(1)
+
 
 mac_regex = r'([0-9a-fA-F]{2}[:-]){5}([0-9a-fA-F]{2})'  # Регулярное выражение как маска МАС-адреса
 ip_regex = r'^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$'  # IP
@@ -81,10 +92,12 @@ class Firewall(object):
             pass
         elif self.mode == "off":
             print('Межсетевой экран выключен, измените файл конфигурации')
-            sys.exit()
+            os.kill(pid, signal.SIGTERM)
+            sys.exit(1)
         else:
             print("Неверно настроен режим межсетевого экранирования")
-            sys.exit()
+            os.kill(pid, signal.SIGTERM)
+            sys.exit(1)
 
     def receive(self, input_packet: Packet):
         self.input = input_packet
@@ -127,6 +140,7 @@ class Firewall(object):
         return result
 
     def message(self):
+        self.check_mode()
         result = self.overall_check()
         if result:
             resulting_message = "Пакет прошел!"
@@ -141,9 +155,11 @@ firewall_mode = conf['mode']
 list_of_src = conf['src_list']
 list_of_dst = conf['dst_list']
 firewall = Firewall(firewall_mode, list_of_src, list_of_dst)  # Создаем фаерволл с заданными параметрами из файла
-while True:
-    packet = create_packet()  # Создаем пакет
-    firewall.receive(packet)  # МЭ получает пакет
-    print(firewall.message())  # МЭ проводит проверку и выводит ответ
-    if cv2.waitKey(0) & 0xFF == ord('q'):
-        break
+
+if __name__ == '__main__':
+    pid = os.getpid()
+    multiprocessing.Process(target=hook, args=[pid]).start()
+    while True:
+        packet = create_packet()  # Создаем пакет
+        firewall.receive(packet)  # МЭ получает пакет
+        print(firewall.message())  # МЭ проводит проверку и выводит ответ
