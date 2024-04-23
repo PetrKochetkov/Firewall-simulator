@@ -39,6 +39,10 @@ def valid_address(add):
         return False
 
 
+class InvalidPacketException(Exception):
+    """raised when packet//"""
+
+
 class Packet(object):  # Класс пакета, который будет приходить на порт межсетевого экрана
     Source = str()  # Будет иметь вид XXX.XXX.XXX.XXX или XX:XX:XX:XX:XX:XX или XX-XX-XX-XX-XX-XX
     Destination = str()  # Будет иметь вид XXX.XXX.XXX.XXX или XX:XX:XX:XX:XX:XX или XX-XX-XX-XX-XX-XX
@@ -46,7 +50,6 @@ class Packet(object):  # Класс пакета, который будет пр
     def __init__(self, source_address, destination_address):
         self.Source = str(source_address)
         self.Destination = str(destination_address)
-
 
     def get_src(self):
         return self.Source
@@ -61,17 +64,17 @@ def create_packet():
     dst = input('Введите адрес получателя: ')
     if valid_address(src) and valid_address(dst):
         test_packet = Packet(src, dst)
-        return test_packet
+        print('Адрес исторчника', test_packet.get_src())
+        print('Адрес получателя', test_packet.get_dst())
     elif not (valid_address(src)):
         print('Неверный адрес источника, вы ввели: {}'.format(src))
         print('Введите данные пакета заново\n')
-        create_packet()
-        return
+        raise InvalidPacketException
     elif not (valid_address(dst)):
         print('Неверный адрес получателя, вы ввели: {}'.format(dst))
         print('Введите данные пакета заново\n')
-        create_packet()
-        return
+        raise InvalidPacketException
+    return test_packet
 
 
 class Firewall(object):
@@ -159,6 +162,12 @@ if __name__ == '__main__':
     pid = os.getpid()
     multiprocessing.Process(target=hook, args=[pid]).start()
     while True:
-        packet = create_packet()  # Создаем пакет
+        while True:
+            try:
+                packet = create_packet()  # Создаем пакет
+                break
+            except InvalidPacketException:
+                pass
         firewall.receive(packet)  # МЭ получает пакет
         print(firewall.message())  # МЭ проводит проверку и выводит ответ
+        print('end')
