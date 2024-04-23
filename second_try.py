@@ -47,8 +47,6 @@ class Packet(object):  # Класс пакета, который будет пр
         self.Source = str(source_address)
         self.Destination = str(destination_address)
 
-    def __str__(self):
-        return "\nАдрес источника: {}\nАдрес назначения: {}\n".format(self.Source, self.Destination)
 
     def get_src(self):
         return self.Source
@@ -57,8 +55,8 @@ class Packet(object):  # Класс пакета, который будет пр
         return self.Destination
 
 
-def create_packet(index):
-    print('Приступаем к созданию пакета {}'.format(index))
+def create_packet():
+    print('Приступаем к созданию пакета')
     src = input('Введите адрес источника: ')
     dst = input('Введите адрес получателя: ')
     if valid_address(src) and valid_address(dst):
@@ -68,10 +66,12 @@ def create_packet(index):
         print('Неверный адрес источника, вы ввели: {}'.format(src))
         print('Введите данные пакета заново\n')
         create_packet()
+        return
     elif not (valid_address(dst)):
-        print('Неверный адрес источника, вы ввели: {}'.format(dst))
+        print('Неверный адрес получателя, вы ввели: {}'.format(dst))
         print('Введите данные пакета заново\n')
         create_packet()
+        return
 
 
 class Firewall(object):
@@ -156,11 +156,9 @@ if __name__ == '__main__':
     list_of_src = conf['src_list']
     list_of_dst = conf['dst_list']
     firewall = Firewall(firewall_mode, list_of_src, list_of_dst)  # Создаем фаерволл с заданными параметрами из файла
-    i = 1
     pid = os.getpid()
     multiprocessing.Process(target=hook, args=[pid]).start()
     while True:
-        packet = create_packet(i)  # Создаем пакет
+        packet = create_packet()  # Создаем пакет
         firewall.receive(packet)  # МЭ получает пакет
         print(firewall.message())  # МЭ проводит проверку и выводит ответ
-        i = i + 1
