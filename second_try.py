@@ -57,8 +57,8 @@ class Packet(object):  # Класс пакета, который будет пр
         return self.Destination
 
 
-def create_packet():
-    print('Приступаем к созданию пакета')
+def create_packet(index):
+    print('Приступаем к созданию пакета {}'.format(index))
     src = input('Введите адрес источника: ')
     dst = input('Введите адрес получателя: ')
     if valid_address(src) and valid_address(dst):
@@ -150,16 +150,17 @@ class Firewall(object):
         return resulting_message
 
 
-conf = get_config()
-firewall_mode = conf['mode']
-list_of_src = conf['src_list']
-list_of_dst = conf['dst_list']
-firewall = Firewall(firewall_mode, list_of_src, list_of_dst)  # Создаем фаерволл с заданными параметрами из файла
-
 if __name__ == '__main__':
+    conf = get_config()
+    firewall_mode = conf['mode']
+    list_of_src = conf['src_list']
+    list_of_dst = conf['dst_list']
+    firewall = Firewall(firewall_mode, list_of_src, list_of_dst)  # Создаем фаерволл с заданными параметрами из файла
+    i = 1
     pid = os.getpid()
     multiprocessing.Process(target=hook, args=[pid]).start()
     while True:
-        packet = create_packet()  # Создаем пакет
+        packet = create_packet(i)  # Создаем пакет
         firewall.receive(packet)  # МЭ получает пакет
         print(firewall.message())  # МЭ проводит проверку и выводит ответ
+        i = i + 1
