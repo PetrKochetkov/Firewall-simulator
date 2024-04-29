@@ -1,19 +1,15 @@
-import os
-import signal
-import keyboard
-import multiprocessing
-import sys
+import json  # для работы с json-файлами
 
 
-def hook(pid):
-    while True:
-        if keyboard.is_pressed('ctrl + h'):
-            os.kill(pid, signal.SIGTERM)
-            sys.exit(1)
+def get_config():
+    """Функция для считывания конфигурационных данных из файла
+    :return: data -> словарь конфигураций МЭ
+    """
+    with open("configuration_for_db.json", "r") as file:
+        data = json.load(file)
+        return data
 
 
-if __name__ == '__main__':
-    pid = os.getpid()
-    multiprocessing.Process(target=hook, args=[pid]).start()
-    while True:
-        print('fdfdfsfs')
+conf = get_config()
+list_of_src = conf['src_list']
+print(list_of_src)
