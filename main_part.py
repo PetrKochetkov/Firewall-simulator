@@ -5,6 +5,7 @@ import os  # для прерывания выполнения программы
 import signal  # для прерывания выполнения программы
 import keyboard  # для прерывания выполнения программы
 import multiprocessing  # для прерывания выполнения программы
+import logging  # для создания логов
 
 
 def hook(process_id):
@@ -53,6 +54,23 @@ def valid_address(add: str) -> bool:
         return False
 
 
+def ip_to_dec(x: str) -> bin:
+    """ Переделывает IP адрес в десятичное число
+    :param x: str IP адрес
+    :return: result_address: IP переделанный в десятичное число
+    """
+    list_add = x.split('.')  # ['XXX', 'XXX', 'XXX', 'XXX']
+    address = []
+    for element in list_add:
+        part = format(int(element), 'b')
+        address.append(part)
+    for index in range(len(address)):
+        while len(address[index]) <= 7:
+            address[index] = '0' + address[index]
+    result_address = int(''.join(address), 2)
+    return result_address
+
+
 class InvalidPacketException(Exception):
     """Поднимается при неправильном создании пакета"""
 
@@ -92,6 +110,7 @@ def create_packet() -> Packet:
     elif not (valid_address(src)):
         print('Неверный адрес источника, вы ввели: {}'.format(src))
         print('Введите данные пакета заново\n')
+
         raise InvalidPacketException
     elif not (valid_address(dst)):
         print('Неверный адрес получателя, вы ввели: {}'.format(dst))
@@ -130,34 +149,80 @@ class Firewall(object):
         self.destinations = dst
         self._check_mode()
 
-    def _check_of_source_address(
-            self,
-            input_packet: Packet
-    ) -> bool:  # Проверка есть ли адрес источника пакета в списке фаервола
+    def _check_of_source_address(self, input_packet: Packet) -> bool:  # Проверка есть ли адрес источника пакета
+        # в списке фаервола
         """Проверка адреса источника
         :param input_packet: объект класса Packet, создается пользователем
         """
-        result = True
+        logging.info('Проверяем адрес источника')
+        logging.info(f'разрешенные адреса источника: {self.sources}')
         checking_src = input_packet.get_src()
-        if checking_src in self.sources:
-            pass
-        else:
-            result = False
+        input_add_dec = ip_to_dec(checking_src)
+        result = True
+        for element in list_of_src:
+            if element.find('-') == -1:  # Проверяем что элемент адресов просто адрес
+                if checking_src == element:
+                    logging.info('Проверяемый адрес есть в списке')
+                    result = True
+                    break
+                else:
+                    logging.info(
+                        f'Проверяемого адреса нет в списке, сравнили введенный {checking_src} и данный {element}')
+                    result = False
+            elif element.find('-') != -1:  # Проверяем что элемент адресов диапазон адресов
+                address_range = element.split('-')
+                range_start = address_range[0]
+                range_start_dec = ip_to_dec(range_start)
+                range_end = address_range[1]
+                range_end_dec = ip_to_dec(range_end)
+                if (input_add_dec >= range_start_dec) and (input_add_dec <= range_end_dec):
+                    logging.info(
+                        f'Проверяемый адрес {checking_src} есть в диапазоне адресов от {range_start} до {range_end}')
+                    result = True
+                    break
+                else:
+                    logging.info(
+                        f'Проверяемого адреса {checking_src} нет в диапазоне адресов от {range_start} до {range_end}')
+                    result = False
+        logging.info(f'Результат проверки адреса источника {result}')
         return result
 
-    def _check_of_destination_address(
-            self,
-            input_packet: Packet
-    ) -> bool:  # Проверка есть ли адрес назначения пакета в списке фаервола
+    def _check_of_destination_address(self, input_packet: Packet
+                                      ) -> bool:  # Проверка есть ли адрес назначения пакета в списке фаервола
         """Проверка адреса назначения
         :param input_packet: объект класса Packet, создается пользователем
         """
-        result = True
+        logging.info('Проверяем адрес назначения')
+        logging.info(f'разрешенные адреса назначения: {self.destinations}')
         checking_dst = input_packet.get_dst()
-        if checking_dst in self.destinations:
-            pass
-        else:
-            result = False
+        input_add_dec = ip_to_dec(checking_dst)
+        result = True
+        for element in list_of_dst:
+            if element.find('-') == -1:  # Проверяем что элемент адресов просто адрес
+                if checking_dst == element:
+                    logging.info('Проверяемый адрес есть в списке')
+                    result = True
+                    break
+                else:
+                    logging.info(
+                        f'Проверяемого адреса нет в списке, сравнили введенный {checking_dst} и данный {element}')
+                    result = False
+            elif element.find('-') != -1:  # Проверяем что элемент адресов диапазон адресов
+                address_range = element.split('-')
+                range_start = address_range[0]
+                range_start_dec = ip_to_dec(range_start)
+                range_end = address_range[1]
+                range_end_dec = ip_to_dec(range_end)
+                if (input_add_dec >= range_start_dec) and (input_add_dec <= range_end_dec):
+                    logging.info(
+                        f'Проверяемый адрес {checking_dst} есть в диапазоне адресов от {range_start} до {range_end}')
+                    result = True
+                    break
+                else:
+                    logging.info(
+                        f'Проверяемый адрес {checking_dst} отсутствует в диапазоне адресов от {range_start} до {range_end}')
+                    result = False
+        logging.info(f'Результат проверки адреса назначения {result}')
         return result
 
     def _overall_check(self, input_packet: Packet) -> bool:
@@ -178,6 +243,7 @@ class Firewall(object):
                 result = False
             else:
                 result = True
+        logging.info(f'Результат всей проверки {result}')
         return result
 
     def message(self, input_packet: Packet) -> str:
@@ -194,6 +260,8 @@ class Firewall(object):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO, filename="py_log.log", filemode="w",
+                        format="%(asctime)s %(levelname)s %(message)s")
     conf = get_config()
     firewall_mode = conf['mode']
     list_of_src = conf['src_list']
@@ -201,15 +269,21 @@ if __name__ == '__main__':
     firewall = Firewall(firewall_mode, list_of_src, list_of_dst)  # Создаем фаерволл с заданными параметрами из файла
     pid = os.getpid()
     multiprocessing.Process(target=hook, args=[pid]).start()
+    i = 1
     while True:
         while True:
             try:
                 packet = create_packet()  # Создаем пакет
+                logging.info(f'Создан пакет с данными №{i}')
+                logging.info(f'Адрес источника {packet.get_src()}')
+                logging.info(f'Адрес назначения {packet.get_dst()}')
                 print('\n')
                 break
             except InvalidPacketException:
+                logging.warning(f'Получена ошибка {InvalidPacketException}')
                 pass
+            finally:
+                i += 1
         print(firewall.message(packet))  # МЭ проводит проверку и выводит ответ
         print('Конец\n')
-# TODO: ввести понятие диапазона адресов
 # TODO: ввести веб интерфейс (админ задает правила), (обычный пользователь проверяет свой пакет)
