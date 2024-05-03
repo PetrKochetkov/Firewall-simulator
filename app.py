@@ -21,7 +21,7 @@ def check_packet():
         message = 'Пакет прошел'
     else:
         message = 'Пакет не прошел'
-    return render_template('output_page.html', message = message)
+    return render_template('output_page.html', message=message)
 
 
 @app.route('/settings')  # Страница ввода настроек

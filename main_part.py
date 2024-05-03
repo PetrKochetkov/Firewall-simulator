@@ -240,16 +240,16 @@ class Firewall(object):
         logging.info(f'Результат всей проверки {result}')
         return result
 
-    def check_packet_all(self, input_packet: Packet) -> str:
+    def check_packet_all(self, input_packet: Packet) -> bool:
         """Отправляет результирующее сообщение пользователю
         :param: input_packet: объект класса Packet, создается пользователем
         :return: resulting_message: тип str, возвращает текстовое сообщение
         """
         result = self._overall_check(input_packet)
         if result:
-            resulting_message = "Пакет прошел!"
+            resulting_message = True
         else:
-            resulting_message = "Пакет не прошел!"
+            resulting_message = False
         return resulting_message
 
 
