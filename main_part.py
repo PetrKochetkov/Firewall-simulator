@@ -159,7 +159,7 @@ class Firewall(object):
         checking_src = input_packet.get_src()
         input_add_dec = ip_to_dec(checking_src)
         result = True
-        for element in list_of_src:
+        for element in self.sources:
             if element.find('-') == -1:  # Проверяем что элемент адресов просто адрес
                 if checking_src == element:
                     logging.info('Проверяемый адрес есть в списке')
@@ -197,7 +197,7 @@ class Firewall(object):
         checking_dst = input_packet.get_dst()
         input_add_dec = ip_to_dec(checking_dst)
         result = True
-        for element in list_of_dst:
+        for element in self.destinations:
             if element.find('-') == -1:  # Проверяем что элемент адресов просто адрес
                 if checking_dst == element:
                     logging.info('Проверяемый адрес есть в списке')
@@ -246,7 +246,7 @@ class Firewall(object):
         logging.info(f'Результат всей проверки {result}')
         return result
 
-    def message(self, input_packet: Packet) -> str:
+    def check_packet(self, input_packet: Packet) -> str:
         """Отправляет результирующее сообщение пользователю
         :param: input_packet: объект класса Packet, создается пользователем
         :return: resulting_message: тип str, возвращает текстовое сообщение
@@ -284,6 +284,6 @@ if __name__ == '__main__':
                 pass
             finally:
                 i += 1
-        print(firewall.message(packet))  # МЭ проводит проверку и выводит ответ
+        print(firewall.check_packet(packet))  # МЭ проводит проверку и выводит ответ
         print('Конец\n')
 # TODO: ввести веб интерфейс (админ задает правила), (обычный пользователь проверяет свой пакет)
