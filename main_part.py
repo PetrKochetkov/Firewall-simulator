@@ -96,25 +96,19 @@ class Packet(object):  # Класс пакета, который будет пр
         return self.Destination
 
 
-def create_packet() -> Packet:
+def create_packet(src: str, dst: str) -> Packet:
     """Создание пакета руками пользователя
+    :param src: Адрес источника
+    :param dst: Адрес назначения
     :return: возвращается объект класса Пакет с заданными пользователем адресами, в случае удачных проверок.
-    :raise: InvalidPacketException в случае некорректного ввода
+    :raise InvalidPacketException в случае некорректного ввода
     """
-    print('Приступаем к созданию пакета')
-    src = input('Введите адрес источника: ')
-    dst = input('Введите адрес получателя: ')
     test_packet = None
     if valid_address(src) and valid_address(dst):
         test_packet = Packet(src, dst)
     elif not (valid_address(src)):
-        print('Неверный адрес источника, вы ввели: {}'.format(src))
-        print('Введите данные пакета заново\n')
-
         raise InvalidPacketException
     elif not (valid_address(dst)):
-        print('Неверный адрес получателя, вы ввели: {}'.format(dst))
-        print('Введите данные пакета заново\n')
         raise InvalidPacketException
     return test_packet
 
@@ -246,7 +240,7 @@ class Firewall(object):
         logging.info(f'Результат всей проверки {result}')
         return result
 
-    def check_packet(self, input_packet: Packet) -> str:
+    def check_packet_all(self, input_packet: Packet) -> str:
         """Отправляет результирующее сообщение пользователю
         :param: input_packet: объект класса Packet, создается пользователем
         :return: resulting_message: тип str, возвращает текстовое сообщение
@@ -259,31 +253,3 @@ class Firewall(object):
         return resulting_message
 
 
-if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO, filename="py_log.log", filemode="w",
-                        format="%(asctime)s %(levelname)s %(message)s")
-    conf = get_config()
-    firewall_mode = conf['mode']
-    list_of_src = conf['src_list']
-    list_of_dst = conf['dst_list']
-    firewall = Firewall(firewall_mode, list_of_src, list_of_dst)  # Создаем фаерволл с заданными параметрами из файла
-    pid = os.getpid()
-    multiprocessing.Process(target=hook, args=[pid]).start()
-    i = 1
-    while True:
-        while True:
-            try:
-                packet = create_packet()  # Создаем пакет
-                logging.info(f'Создан пакет с данными №{i}')
-                logging.info(f'Адрес источника {packet.get_src()}')
-                logging.info(f'Адрес назначения {packet.get_dst()}')
-                print('\n')
-                break
-            except InvalidPacketException:
-                logging.warning(f'Получена ошибка {InvalidPacketException}')
-                pass
-            finally:
-                i += 1
-        print(firewall.check_packet(packet))  # МЭ проводит проверку и выводит ответ
-        print('Конец\n')
-# TODO: ввести веб интерфейс (админ задает правила), (обычный пользователь проверяет свой пакет)

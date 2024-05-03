@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+   <meta charset="UTF-8">
+   <title>Processing Page</title>
+  </head>
+  <body>
+    <h1>Hello, User!</h1>
+    <p>Let's try smth</p>
+    <form action = {{url_for('check_packet')}} method="post">
+        <label for="source_address">Адрес источника:</label>
+        <input type="text" id="source_address" name="source_address"><br><br>
+        <label for="destination_address">Адрес назначения:</label>
+        <input type="text" id="destination_address" name="destination_address"><br><br>
+        <input type="submit" value="Submit">
+    </form>
+  </body>
+</html>
