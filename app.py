@@ -16,11 +16,14 @@ def put_packet():
 def check_packet():
     source_address = request.form['source_address']
     destination_address = request.form['destination_address']
-    users_packet = create_packet(source_address, destination_address)
-    if firewall.check_packet_all(users_packet):
-        message = 'Пакет прошел'
-    else:
-        message = 'Пакет не прошел'
+    try:
+        users_packet = create_packet(source_address, destination_address)
+        if firewall.check_packet_all(users_packet):
+            message = 'Пакет прошел'
+        else:
+            message = 'Пакет не прошел'
+    except InvalidPacketException:
+        message = 'Неверно введены данные пакета'
     return render_template('output_page.html', message=message)
 
 
