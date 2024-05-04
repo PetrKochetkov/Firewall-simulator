@@ -240,6 +240,11 @@ class Firewall(object):
         logging.info(f'Результат всей проверки {result}')
         return result
 
+    def change_settings(self, new_mode: str, new_sources: list, new_destinations: list):
+        self.mode = new_mode
+        self.sources = new_sources
+        self.destinations = new_destinations
+
     def check_packet_all(self, input_packet: Packet) -> bool:
         """Отправляет результирующее сообщение пользователю
         :param: input_packet: объект класса Packet, создается пользователем
