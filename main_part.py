@@ -251,5 +251,3 @@ class Firewall(object):
         else:
             resulting_message = False
         return resulting_message
-
-

@@ -29,7 +29,19 @@ def check_packet():
 
 @app.route('/settings')  # Страница ввода настроек
 def firewall_settings():
-    return render_template('settings.html')
+    mode = firewall.mode
+    match mode:
+        case 'wl':
+            result_mode = 'White List'
+        case 'bl':
+            result_mode = 'Black List'
+        case 'off':
+            result_mode = 'Off'
+        case _:
+            result_mode = '((('
+    src_adds = sorted(firewall.sources)
+    dst_adds = sorted(firewall.destinations)
+    return render_template('settings.html', mode=result_mode, src_adds=src_adds, dst_adds=dst_adds)
 
 
 if __name__ == '__main__':

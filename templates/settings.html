@@ -6,7 +6,27 @@
   </head>
   <body>
     <h1>Hello, Admin!</h1>
-    <p>Let's change smth</p>
-
+    <div>
+        <p>These are currents settings of firewall</p>
+    </div>
+    <div>
+        <p>Mode of firewall: {{mode}}</p>
+    </div>
+    <div>
+        Source addresses:
+        <ul>
+            {% for element in src_adds %}
+                <li>{{ element }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div>
+        Destination addresses:
+        <ul>
+            {% for element in dst_adds %}
+                <li>{{ element }}</li>
+            {% endfor %}
+        </ul>
+    </div>
   </body>
 </html>
