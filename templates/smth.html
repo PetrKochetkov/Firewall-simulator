@@ -28,7 +28,7 @@
         <h2>Source addresses:</h2>
         <ul id="list1" class="list1">
             {% for element in src_adds %}
-                <li>{{ element }} <button onclick="deleteItem('list1', this)">Delete</button></li>
+            <li><span>{{ element }}</span> <button onclick="deleteItem('list1', this)">Delete</button></li>
             {% endfor %}
         </ul>
         <input type="text" id="newItem1" placeholder="Add new item">
@@ -38,20 +38,25 @@
         <h2>Destination addresses:</h2>
         <ul id="list2" class="list2">
             {% for element in dst_adds %}
-                <li>{{ element }} <button onclick="deleteItem('list2', this)">Delete</button></li>
+            <li><span>{{ element }}</span> <button onclick="deleteItem('list2', this)">Delete</button></li>
             {% endfor %}
         </ul>
         <input type="text" id="newItem2" placeholder="Add new item">
         <button onclick="addItem('list2', 'newItem2')">Add Item</button>
-    </div>
 
+    </div>
+    <div>
+        <button onclick="sendUpdate()">Update settings</button>
+    </div>
 
     <script>
         function addItem(listId, inputId) {
             const list = document.getElementById(listId);
             const newItem = document.getElementById(inputId).value;
             const li = document.createElement("li");
-            li.textContent = newItem;
+            const span = document.createElement("span")
+            span.textContent = newItem;
+            li.appendChild(span)
             li.innerHTML += ' <button onclick="deleteItem(\'' + listId + '\', this)">Delete</button>';
             list.appendChild(li);
             document.getElementById(inputId).value = '';
@@ -63,31 +68,34 @@
     </script>
 
     <script>
-        var list1 = document.querySelectorAll('.list1 li');
-        var list2 = document.querySelectorAll('.list2 li');
+        function sendUpdate() {
+            const list1 = document.querySelectorAll('.list1 li span');
+            const list2 = document.querySelectorAll('.list2 li span');
+            const enteredValue = document.getElementById("myInput").value;
+            console.log(list1)
+            const data = {
+                mode: enteredValue,
+                src_list: [],
+                dst_list: []
+            };
 
-        var data = {
-            list1: [],
-            list2: []
-        };
+            list1.forEach(function(item) {
+                data.src_list.push(item.textContent);
+            });
 
-        list1.forEach(function(item) {
-            data.list1.push(item.textContent);
-        });
+            list2.forEach(function(item) {
+                data.dst_list.push(item.textContent);
+            });
+            console.log(data)
 
-        list2.forEach(function(item) {
-            data.list2.push(item.textContent);
-        });
-
-        data.enteredValue.push();
-
-        fetch('localhost:5000/check', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        });
+            fetch('http://127.0.0.1:5000/check', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+        }
     </script>
 
 </body>

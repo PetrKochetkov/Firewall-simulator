@@ -1,20 +1,6 @@
 import json  # для работы с json-файлами
 import re  # для работы с регулярными выражениями
-import sys  # для прерывания выполнения программы
-import os  # для прерывания выполнения программы
-import signal  # для прерывания выполнения программы
-import keyboard  # для прерывания выполнения программы
-import multiprocessing  # для прерывания выполнения программы
 import logging  # для создания логов
-
-
-def hook(process_id):
-    """Функция "слушает" нажатие клавиш ctrl+1 для прекращения работы программы"""
-    while True:
-        if keyboard.is_pressed('ctrl + 1'):
-            os.kill(process_id, signal.SIGTERM)
-            sys.exit(1)
-
 
 mac_regex = r'([0-9a-fA-F]{2}[:-]){5}([0-9a-fA-F]{2})'  # Регулярное выражение как маска МАС-адреса
 ip_regex = r'^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$'  # IP
@@ -75,6 +61,10 @@ class InvalidPacketException(Exception):
     """Поднимается при неправильном создании пакета"""
 
 
+class InvalidSettingsError(Exception):
+    """Поднимается при неверном варианте настроек межсетевого экрана"""
+
+
 class Packet(object):  # Класс пакета, который будет приходить на порт межсетевого экрана
     Source = str()  # Будет иметь вид XXX.XXX.XXX.XXX или XX:XX:XX:XX:XX:XX или XX-XX-XX-XX-XX-XX
     Destination = str()  # Будет иметь вид XXX.XXX.XXX.XXX или XX:XX:XX:XX:XX:XX или XX-XX-XX-XX-XX-XX
@@ -118,19 +108,26 @@ class Firewall(object):
     sources = []  # Список адресов источников
     destinations = []  # Список адресов назначений
 
-    def _check_mode(self) -> None:
+    @staticmethod
+    def _check_mode(new_mode: str) -> None:
         """Проверяет режим работы МЭ"""
-        match self.mode:
+        match new_mode:
             case "wl":
                 pass
             case "bl":
                 pass
             case "off":
-                print('Межсетевой экран выключен, измените файл конфигурации')
-                sys.exit(1)
+                pass
             case _:
-                print("Неверно настроен режим межсетевого экранирования")
-                sys.exit(1)
+                raise InvalidSettingsError('Неверный режим работы')
+
+    @staticmethod
+    def _check_address(list_of_addresses):
+        for element in list_of_addresses:
+            if valid_address(element):
+                pass
+            else:
+                raise InvalidSettingsError('Неверный формат адреса')
 
     def __init__(self, mode: str, src: list, dst: list):
         """Создает объект класса Firewall
@@ -138,10 +135,16 @@ class Firewall(object):
         :param src: тип list, получается из JSON, содержит список адресов источников
         :param dst: тип list, получается из JSON, содержит список адресов назначений
         """
-        self.mode = mode
-        self.sources = src
-        self.destinations = dst
-        self._check_mode()
+
+        try:
+            self._check_mode(mode)
+            # self._check_address(src) # Все ломается из за диапазонов
+            # self._check_address(dst) # Все ломается из за диапазонов
+            self.mode = mode
+            self.sources = src
+            self.destinations = dst
+        except InvalidSettingsError:
+            print('bla1')
 
     def _check_of_source_address(self, input_packet: Packet) -> bool:  # Проверка есть ли адрес источника пакета
         # в списке фаервола
@@ -241,9 +244,15 @@ class Firewall(object):
         return result
 
     def change_settings(self, new_mode: str, new_sources: list, new_destinations: list):
-        self.mode = new_mode
-        self.sources = new_sources
-        self.destinations = new_destinations
+        try:
+            self._check_mode(new_mode)
+            # self._check_address(new_sources) #Все ломается из за диапазонов
+            # self._check_address(new_destinations) #Все ломается из за диапазонов
+            self.mode = new_mode
+            self.sources = new_sources
+            self.destinations = new_destinations
+        except InvalidSettingsError:
+            print('bla2')
 
     def check_packet_all(self, input_packet: Packet) -> bool:
         """Отправляет результирующее сообщение пользователю

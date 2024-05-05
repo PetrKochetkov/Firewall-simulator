@@ -7,6 +7,12 @@
   <body>
     <h1>Hello, User!</h1>
     <p>Check it!</p>
-    <p>{{message}}</p>
+    <p id="msg">{{message}}</p>
+
+   <script>
+       window.onload = () => {
+       setTimeout(() => {window.location.replace('/')}, 2000)
+       }
+   </script>
   </body>
 </html>
