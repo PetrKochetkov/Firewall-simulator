@@ -1,14 +1,14 @@
-from flask import Flask
-from flask import render_template
-from flask import request
-from main_part import *
-from json import JSONDecodeError
-import logging  # для создания логов
+from flask import Flask  # imports Flask
+from flask import render_template  # imports Flask
+from flask import request  # imports Flask
+from main_part import *  # imports file with firewall
+from json import JSONDecodeError  # imports common error of JSON parsing
+import logging  # for logging
 
 app = Flask(__name__)
 
 
-@app.route('/', methods=['GET', 'POST'])  # Страница ввода пакета и вывода результата
+@app.route('/', methods=['GET', 'POST'])  # Page for packet input and result output
 def put_packet():
     if request.method == 'GET':
         return render_template('input_page.html')
@@ -18,15 +18,15 @@ def put_packet():
         try:
             users_packet = create_packet(source_address, destination_address)
             if firewall.check_packet_all(users_packet):
-                message = 'Пакет прошел'
+                message = 'The package passed'
             else:
-                message = 'Пакет не прошел'
+                message = 'The package did not go through'
         except InvalidPacketException:
-            message = 'Неверно введены данные пакета'
+            message = 'Invalid package data entered'
         return render_template('output_page.html', message=message)
 
 
-@app.route('/settings', methods=['GET', 'POST'])
+@app.route('/settings', methods=['GET', 'POST'])  # Page with Firewall settings and possibility to change them
 def something():
     if request.method == 'GET':
         mode = firewall.mode
