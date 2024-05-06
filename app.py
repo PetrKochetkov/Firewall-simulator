@@ -26,7 +26,7 @@ def put_packet():
         return render_template('output_page.html', message=message)
 
 
-@app.route('/check', methods=['GET', 'POST'])
+@app.route('/settings', methods=['GET', 'POST'])
 def something():
     if request.method == 'GET':
         mode = firewall.mode
@@ -41,7 +41,7 @@ def something():
                 result_mode = '((('
         src_adds = sorted(firewall.sources)
         dst_adds = sorted(firewall.destinations)
-        return render_template('smth.html', mode=result_mode, src_adds=src_adds, dst_adds=dst_adds)
+        return render_template('settings.html', mode=result_mode, src_adds=src_adds, dst_adds=dst_adds)
     if request.method == 'POST':
         try:
             data = request.get_json()
@@ -58,7 +58,7 @@ def something():
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO, filename="py_log.log", filemode="w",
+    logging.basicConfig(level=logging.INFO, filemode="w",
                         format="%(asctime)s %(levelname)s %(message)s")
     conf = get_config()
     firewall_mode = conf['mode']
