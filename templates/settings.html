@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editable Lists</title>
+    <title>FW Settings</title>
 </head>
 
 <body>
@@ -13,15 +13,8 @@
         <h2>Current mode is {{ mode }}</h2>
         <p>Change mode to
             <input type="text" id="myInput" value="{{ mode }}">
-            <button onclick="saveValue()">Save</button>
         </p>
 
-
-        <script>
-            function saveValue() {
-              var enteredValue = document.getElementById("myInput").value;
-            }
-        </script>
     </div>
 
     <div id="list_of_src_adds">
@@ -72,7 +65,7 @@
             const list1 = document.querySelectorAll('.list1 li span');
             const list2 = document.querySelectorAll('.list2 li span');
             const enteredValue = document.getElementById("myInput").value;
-            console.log(list1)
+            console.log(list1);
             const data = {
                 mode: enteredValue,
                 src_list: [],
@@ -86,7 +79,7 @@
             list2.forEach(function(item) {
                 data.dst_list.push(item.textContent);
             });
-            console.log(data)
+            console.log(data);
 
             fetch('http://127.0.0.1:5000/settings', {
                 method: 'POST',
@@ -95,6 +88,10 @@
                 },
                 body: JSON.stringify(data)
             });
+
+            window.onload = () => {
+            setTimeout(() => {window.location.replace('/settings')}, 1000)
+            };
         }
     </script>
 
