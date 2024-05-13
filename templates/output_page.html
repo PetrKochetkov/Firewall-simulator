@@ -1,18 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-   <meta charset="UTF-8">
-   <title>Output page</title>
-  </head>
-  <body>
-    <h1>Hello, User!</h1>
-    <p>Check it!</p>
-    <p id="msg">{{message}}</p>
+<head>
+    <meta charset="UTF-8">
+    <title>Output page</title>
+    <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet">
+</head>
+<body>
+    <div class="main-container">
+        <h1>Hello, User!</h1>
+        <p>Check it!</p>
+        <p id="msg">{{message}}</p>
 
-   <script>
-       window.onload = () => {
-       setTimeout(() => {window.location.replace('/')}, 2000)
-       }
-   </script>
-  </body>
+        <script>
+            window.onload = () => {
+            setTimeout(() => {window.location.replace('/')}, 2000)
+            }
+        </script>
+   </div>
+</body>
 </html>
