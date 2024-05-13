@@ -246,6 +246,8 @@ class Firewall(object):
                 result = False
             else:
                 result = True
+        elif self.mode == "off":
+            result = True
         logging.info(f'The result of the entire check {result}')
         return result
 

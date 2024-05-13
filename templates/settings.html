@@ -58,9 +58,7 @@
         function deleteItem(listId, element) {
             element.parentNode.remove();
         }
-    </script>
 
-    <script>
         function sendUpdate() {
             const list1 = document.querySelectorAll('.list1 li span');
             const list2 = document.querySelectorAll('.list2 li span');
@@ -80,19 +78,25 @@
                 data.dst_list.push(item.textContent);
             });
             console.log(data);
+            sendUpdateRequest(data);
 
-            fetch('http://127.0.0.1:5000/settings', {
+        }
+
+        async function sendUpdateRequest(data) {
+            const result = await fetch('http://127.0.0.1:5000/settings', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(data)
             });
+            if (result.status === 200) {
+                window.location.replace('/settings')
+            }
+            else {console.log('Error with JSON')}
 
-            window.onload = () => {
-            setTimeout(() => {window.location.replace('/settings')}, 1000)
-            };
-        }
+        };
+
     </script>
 
 </body>
