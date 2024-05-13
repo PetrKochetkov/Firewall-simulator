@@ -58,11 +58,12 @@ def something():
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO, filemode="w",
+    logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s %(levelname)s %(message)s")
     conf = get_config()
     firewall_mode = conf['mode']
     list_of_src = conf['src_list']
     list_of_dst = conf['dst_list']
-    firewall = Firewall(firewall_mode, list_of_src, list_of_dst)  # Создаем фаерволл с заданными параметрами из файла
+    firewall = Firewall(firewall_mode, list_of_src, list_of_dst)  # Create a firewall with the given parameters
+    # from the file
     app.run(debug=True)

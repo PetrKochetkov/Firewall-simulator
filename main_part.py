@@ -259,7 +259,7 @@ class Firewall(object):
             self.sources = new_sources
             self.destinations = new_destinations
         except InvalidSettingsError:
-            sys.exit(1)
+            sys.exit(1)  # Надо не заканчивать работу программы, а просто выводить ошибку
 
     def check_packet_all(self, input_packet: Packet) -> bool:
         """Sends the resulting message to the user
