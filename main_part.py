@@ -155,7 +155,7 @@ class Firewall(object):
         logging.info(f'Allowed source addresses: {self.sources}')
         checking_src = input_packet.get_src()
         input_add_dec = ip_to_dec(checking_src)
-        result = True
+        result = False
         for element in self.sources:
             if element.find('-') == -1:  # Checks that the addresses element is just an address and not a range
                 if checking_src == element:
@@ -195,7 +195,7 @@ class Firewall(object):
         logging.info(f'Allowed destinations: {self.destinations}')
         checking_dst = input_packet.get_dst()
         input_add_dec = ip_to_dec(checking_dst)
-        result = True
+        result = False
         for element in self.destinations:
             if element.find('-') == -1:  # Check that the addresses element is just an address and
                 # not a range of addresses
