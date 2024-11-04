@@ -1,28 +1,16 @@
-import json  # для работы с json-файлами
-import re  # для работы с регулярными выражениями
-import sys  # для прерывания выполнения программы
-import os  # для прерывания выполнения программы
-import signal  # для прерывания выполнения программы
-import keyboard  # для прерывания выполнения программы
-import multiprocessing  # для прерывания выполнения программы
-import logging  # для создания логов
+import json  # for working with json-files
+import re  # for working with regular expressions
+import logging  # for logging
+import sys
 
-
-def hook(process_id):
-    """Функция "слушает" нажатие клавиш ctrl+1 для прекращения работы программы"""
-    while True:
-        if keyboard.is_pressed('ctrl + 1'):
-            os.kill(process_id, signal.SIGTERM)
-            sys.exit(1)
-
-
-mac_regex = r'([0-9a-fA-F]{2}[:-]){5}([0-9a-fA-F]{2})'  # Регулярное выражение как маска МАС-адреса
-ip_regex = r'^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$'  # IP
+mac_regex = r'([0-9a-fA-F]{2}[:-]){5}([0-9a-fA-F]{2})'  # regular expressions as mask for MAC address
+ip_regex = r'^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$'
+# same for IP address
 
 
 def get_config():
-    """Функция для считывания конфигурационных данных из файла
-    :return: data -> словарь конфигураций МЭ
+    """For reading configuration data from .json file
+    :return: data -> data in dictionary format
     """
     with open("configuration_for_db.json", "r") as file:
         data = json.load(file)
@@ -30,23 +18,22 @@ def get_config():
 
 
 def valid_mac(mac_address: str) -> bool:
-    """Функция для проверки MAC-адреса на корректность формата ввода
-    :return: Булево значение, в зависимости от корректности формата ввода
+    """For checking MAC address correct input format
+    :return: Boolean value, depending on the correctness of the input format
     """
     return bool(re.match(mac_regex, mac_address))
 
 
 def valid_ip(ip_address: str) -> bool:
-    """Функция для проверки IP-адреса на корректность формата ввода
-    :return: Булево значение, в зависимости от корректности формата ввода
+    """For checking IP address correct input format
+    :return:  Boolean value, depending on the correctness of the input format
     """
-
     return bool(re.match(ip_regex, ip_address))
 
 
 def valid_address(add: str) -> bool:
-    """Проверяет адрес на корректность, в независимости от MAC это или IP адрес
-    :return: Булево значение, в зависимости от результата проверки
+    """Checks the address for correctness, regardless of whether it is a MAC or IP address
+    :return: Boolean value, depending on the correctness of the input format
     """
     if valid_ip(add) or valid_mac(add):
         return True
@@ -55,9 +42,9 @@ def valid_address(add: str) -> bool:
 
 
 def ip_to_dec(x: str) -> bin:
-    """ Переделывает IP адрес в десятичное число
-    :param x: str IP адрес
-    :return: result_address: IP переделанный в десятичное число
+    """ Converts an IP address to a decimal number
+    :param x: string IP address
+    :return: result_address: IP converted to decimal
     """
     list_add = x.split('.')  # ['XXX', 'XXX', 'XXX', 'XXX']
     address = []
@@ -72,104 +59,115 @@ def ip_to_dec(x: str) -> bin:
 
 
 class InvalidPacketException(Exception):
-    """Поднимается при неправильном создании пакета"""
+    """Raises when the package is created incorrectly"""
 
 
-class Packet(object):  # Класс пакета, который будет приходить на порт межсетевого экрана
-    Source = str()  # Будет иметь вид XXX.XXX.XXX.XXX или XX:XX:XX:XX:XX:XX или XX-XX-XX-XX-XX-XX
-    Destination = str()  # Будет иметь вид XXX.XXX.XXX.XXX или XX:XX:XX:XX:XX:XX или XX-XX-XX-XX-XX-XX
+class InvalidSettingsError(Exception):
+    """Raises when the firewall settings are incorrect"""
+
+
+class Packet(object):  # Class of the packet that will arrive at the firewall
+    Source = str()  # Looks like XXX.XXX.XXX.XXX or XX:XX:XX:XX:XX:XX
+    Destination = str()  # Looks like XXX.XXX.XXX.XXX or XX:XX:XX:XX:XX:XX
 
     def __init__(self, source_address: str, destination_address: str):
         self.Source = str(source_address)
         self.Destination = str(destination_address)
 
     def get_src(self):
-        """Возвращает адрес источника
-        :return: адрес источника в текстовом формате
+        """Gets source address from Packet object
+        :return: source address in text format
         """
         return self.Source
 
     def get_dst(self):
-        """Возвращает адрес назначения
-        :return: адрес получателя в текстовом формате
+        """Gets destination address from Packet object
+        :return: destination address in text format
         """
         return self.Destination
 
 
-def create_packet() -> Packet:
-    """Создание пакета руками пользователя
-    :return: возвращается объект класса Пакет с заданными пользователем адресами, в случае удачных проверок.
-    :raise: InvalidPacketException в случае некорректного ввода
+def create_packet(src: str, dst: str) -> Packet:
+    """Creating a package by user's hand
+    :param src: Source address
+    :param dst: Destination address
+    :return: an object of the Package class with user-specified addresses, in case of successful checks
+    :raise InvalidPacketException in case of incorrect input
     """
-    print('Приступаем к созданию пакета')
-    src = input('Введите адрес источника: ')
-    dst = input('Введите адрес получателя: ')
     test_packet = None
     if valid_address(src) and valid_address(dst):
         test_packet = Packet(src, dst)
     elif not (valid_address(src)):
-        print('Неверный адрес источника, вы ввели: {}'.format(src))
-        print('Введите данные пакета заново\n')
-
         raise InvalidPacketException
     elif not (valid_address(dst)):
-        print('Неверный адрес получателя, вы ввели: {}'.format(dst))
-        print('Введите данные пакета заново\n')
         raise InvalidPacketException
     return test_packet
 
 
 class Firewall(object):
-    mode = None  # Режим работы фаервола, он работает либо с белыми листами, либо с черными листами
-    sources = []  # Список адресов источников
-    destinations = []  # Список адресов назначений
+    mode = None  # Firewall operating mode, it works with either white lists (wl) or black lists (bl)
+    sources = []  # List of source addresses
+    destinations = []  # List of destination addresses
 
-    def _check_mode(self) -> None:
-        """Проверяет режим работы МЭ"""
-        match self.mode:
+    @staticmethod
+    def _check_mode(new_mode: str) -> None:
+        """Checks the operating mode of the FW"""
+        match new_mode:
             case "wl":
                 pass
             case "bl":
                 pass
             case "off":
-                print('Межсетевой экран выключен, измените файл конфигурации')
-                sys.exit(1)
+                pass
             case _:
-                print("Неверно настроен режим межсетевого экранирования")
-                sys.exit(1)
+                raise InvalidSettingsError('Incorrect working mode')
+
+    @staticmethod
+    def _check_address(list_of_addresses):
+        for element in list_of_addresses:
+            if valid_address(element):
+                pass
+            else:
+                raise InvalidSettingsError('Invalid address format')
 
     def __init__(self, mode: str, src: list, dst: list):
-        """Создает объект класса Firewall
-        :param mode: тип str, получается из JSON, режим МЭ
-        :param src: тип list, получается из JSON, содержит список адресов источников
-        :param dst: тип list, получается из JSON, содержит список адресов назначений
+        """Creates an object of the Firewall class
+        :param mode: str type, obtained from JSON, Firewall mode
+        :param src: list type, obtained from JSON, contains a list of source addresses
+        :param dst: list type, obtained from JSON, contains a list of destination addresses
         """
-        self.mode = mode
-        self.sources = src
-        self.destinations = dst
-        self._check_mode()
 
-    def _check_of_source_address(self, input_packet: Packet) -> bool:  # Проверка есть ли адрес источника пакета
-        # в списке фаервола
-        """Проверка адреса источника
-        :param input_packet: объект класса Packet, создается пользователем
+        try:
+            self._check_mode(mode)
+            # self._check_address(src) # Все ломается из за диапазонов
+            # self._check_address(dst) # Все ломается из за диапазонов
+            self.mode = mode
+            self.sources = src
+            self.destinations = dst
+        except InvalidSettingsError:
+            sys.exit(1)
+
+    def _check_of_source_address(self, input_packet: Packet) -> bool:
+        """Checking whether the packet source address is in the firewall list
+        :param input_packet: an object of the Packet class, created by the user
         """
-        logging.info('Проверяем адрес источника')
-        logging.info(f'разрешенные адреса источника: {self.sources}')
+        logging.info('Checking the source address')
+        logging.info(f'Allowed source addresses: {self.sources}')
         checking_src = input_packet.get_src()
         input_add_dec = ip_to_dec(checking_src)
-        result = True
-        for element in list_of_src:
-            if element.find('-') == -1:  # Проверяем что элемент адресов просто адрес
+        result = False
+        for element in self.sources:
+            if element.find('-') == -1:  # Checks that the addresses element is just an address and not a range
                 if checking_src == element:
-                    logging.info('Проверяемый адрес есть в списке')
+                    logging.info(f'The address being checked {checking_src} is in the list')
                     result = True
                     break
                 else:
                     logging.info(
-                        f'Проверяемого адреса нет в списке, сравнили введенный {checking_src} и данный {element}')
+                        f'The address being checked is not in the list, compare the entered {checking_src} and'
+                        f' the given {element}')
                     result = False
-            elif element.find('-') != -1:  # Проверяем что элемент адресов диапазон адресов
+            elif element.find('-') != -1:  # Check that the address element is a range of addresses
                 address_range = element.split('-')
                 range_start = address_range[0]
                 range_start_dec = ip_to_dec(range_start)
@@ -177,37 +175,40 @@ class Firewall(object):
                 range_end_dec = ip_to_dec(range_end)
                 if (input_add_dec >= range_start_dec) and (input_add_dec <= range_end_dec):
                     logging.info(
-                        f'Проверяемый адрес {checking_src} есть в диапазоне адресов от {range_start} до {range_end}')
+                        f'The address being checked {checking_src} is in the address range from {range_start}'
+                        f' to {range_end}')
                     result = True
                     break
                 else:
                     logging.info(
-                        f'Проверяемого адреса {checking_src} нет в диапазоне адресов от {range_start} до {range_end}')
+                        f'The address being checked {checking_src} is not in the address range from {range_start}'
+                        f' to {range_end}')
                     result = False
-        logging.info(f'Результат проверки адреса источника {result}')
+        logging.info(f'The result of checking the source address {result} in the list of addresses')
         return result
 
-    def _check_of_destination_address(self, input_packet: Packet
-                                      ) -> bool:  # Проверка есть ли адрес назначения пакета в списке фаервола
-        """Проверка адреса назначения
-        :param input_packet: объект класса Packet, создается пользователем
+    def _check_of_destination_address(self, input_packet: Packet) -> bool:
+        """Проверка есть ли адрес назначения пакета в списке фаервола
+        :param input_packet: an object of the Packet class, created by the user
         """
-        logging.info('Проверяем адрес назначения')
-        logging.info(f'разрешенные адреса назначения: {self.destinations}')
+        logging.info('Checking the destination address')
+        logging.info(f'Allowed destinations: {self.destinations}')
         checking_dst = input_packet.get_dst()
         input_add_dec = ip_to_dec(checking_dst)
-        result = True
-        for element in list_of_dst:
-            if element.find('-') == -1:  # Проверяем что элемент адресов просто адрес
+        result = False
+        for element in self.destinations:
+            if element.find('-') == -1:  # Check that the addresses element is just an address and
+                # not a range of addresses
                 if checking_dst == element:
-                    logging.info('Проверяемый адрес есть в списке')
+                    logging.info(f'The address being checked {checking_dst} is in the list')
                     result = True
                     break
                 else:
                     logging.info(
-                        f'Проверяемого адреса нет в списке, сравнили введенный {checking_dst} и данный {element}')
+                        f'The address being checked is not in the list, compare the entered {checking_dst} and the'
+                        f' given {element}')
                     result = False
-            elif element.find('-') != -1:  # Проверяем что элемент адресов диапазон адресов
+            elif element.find('-') != -1:  # Check that the address element is a range of addresses
                 address_range = element.split('-')
                 range_start = address_range[0]
                 range_start_dec = ip_to_dec(range_start)
@@ -215,75 +216,61 @@ class Firewall(object):
                 range_end_dec = ip_to_dec(range_end)
                 if (input_add_dec >= range_start_dec) and (input_add_dec <= range_end_dec):
                     logging.info(
-                        f'Проверяемый адрес {checking_dst} есть в диапазоне адресов от {range_start} до {range_end}')
+                        f'The address being checked {checking_dst} is in the address range from {range_start}'
+                        f' to {range_end}')
                     result = True
                     break
                 else:
                     logging.info(
-                        f'Проверяемый адрес {checking_dst} отсутствует в диапазоне адресов от {range_start} до {range_end}')
+                        f'The address being checked {checking_dst} is not in the range'
+                        f' addresses from {range_start} to {range_end}')
                     result = False
-        logging.info(f'Результат проверки адреса назначения {result}')
+        logging.info(f'Destination address check result {result}')
         return result
 
     def _overall_check(self, input_packet: Packet) -> bool:
-        """Проверяет пакет на соответствие правилам МЭ
-        :param input_packet: объект класса Packet, создается пользователем
-        :return: result: Булево значение, в зависимости от проверки
+        """Checks the package for compliance with firewall rules
+        :param input_packet: an object of the Packet class, created by the user
+        :return: result: Boolean value, depending on the check
         """
         result = True
-        if self.mode == "wl":  # При работе в режиме белого листа разрешено пропускать то, что есть в списках,
-            # остальное нельзя пропускать
+        if self.mode == "wl":  # When working in white list mode, it is allowed to skip what is in the lists,
+            # you can't skip the rest
             if self._check_of_source_address(input_packet) and self._check_of_destination_address(input_packet):
                 result = True
             else:
                 result = False
-        elif self.mode == "bl":  # При работе в режиме черного листа, запрещено тем, кто есть в списках, остальным
-            # разрешено
+        elif self.mode == "bl":  # When working in blacklist mode, it is prohibited for those who are on the lists,
+            # the rest allowed
             if self._check_of_destination_address(input_packet) or self._check_of_source_address(input_packet):
                 result = False
             else:
                 result = True
-        logging.info(f'Результат всей проверки {result}')
+        elif self.mode == "off":
+            result = True
+        logging.info(f'The result of the entire check {result}')
         return result
 
-    def message(self, input_packet: Packet) -> str:
-        """Отправляет результирующее сообщение пользователю
-        :param: input_packet: объект класса Packet, создается пользователем
-        :return: resulting_message: тип str, возвращает текстовое сообщение
+    def change_settings(self, new_mode: str, new_sources: list, new_destinations: list) -> None:
+        """Changes settings of firewall if input data is in normal form, otherwise raises Error and stop program"""
+        try:
+            self._check_mode(new_mode)
+            # self._check_address(new_sources) #Все ломается из за диапазонов
+            # self._check_address(new_destinations) #Все ломается из за диапазонов
+            self.mode = new_mode
+            self.sources = new_sources
+            self.destinations = new_destinations
+        except InvalidSettingsError:
+            sys.exit(1)  # Надо не заканчивать работу программы, а просто выводить ошибку
+
+    def check_packet_all(self, input_packet: Packet) -> bool:
+        """Sends the resulting message to the user
+        :param input_packet: an object of the Packet class, created by the user
+        :return: resulting_message: type bool
         """
         result = self._overall_check(input_packet)
         if result:
-            resulting_message = "Пакет прошел!"
+            resulting_message = True
         else:
-            resulting_message = "Пакет не прошел!"
+            resulting_message = False
         return resulting_message
-
-
-if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO, filename="py_log.log", filemode="w",
-                        format="%(asctime)s %(levelname)s %(message)s")
-    conf = get_config()
-    firewall_mode = conf['mode']
-    list_of_src = conf['src_list']
-    list_of_dst = conf['dst_list']
-    firewall = Firewall(firewall_mode, list_of_src, list_of_dst)  # Создаем фаерволл с заданными параметрами из файла
-    pid = os.getpid()
-    multiprocessing.Process(target=hook, args=[pid]).start()
-    i = 1
-    while True:
-        while True:
-            try:
-                packet = create_packet()  # Создаем пакет
-                logging.info(f'Создан пакет с данными №{i}')
-                logging.info(f'Адрес источника {packet.get_src()}')
-                logging.info(f'Адрес назначения {packet.get_dst()}')
-                print('\n')
-                break
-            except InvalidPacketException:
-                logging.warning(f'Получена ошибка {InvalidPacketException}')
-                pass
-            finally:
-                i += 1
-        print(firewall.message(packet))  # МЭ проводит проверку и выводит ответ
-        print('Конец\n')
-# TODO: ввести веб интерфейс (админ задает правила), (обычный пользователь проверяет свой пакет)

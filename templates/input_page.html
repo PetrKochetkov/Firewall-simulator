@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Input page</title>
+    <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet">
+</head>
+<body>
+    <div class="main-container">
+        <h1>Hello, User!</h1>
+        <p>Let's try something, input your packet!</p>
+        <form method="post">
+            <p><label for="source_address">Source address:</label>
+            <input type="text" id="source_address" name="source_address"></p>
+            <p><label for="destination_address">Destination address:</label>
+            <input type="text" id="destination_address" name="destination_address"></p>
+            <p><input type="submit" value="Submit"></p>
+        </form>
+    </div>
+</body>
+</html>
